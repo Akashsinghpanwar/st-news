@@ -1,5 +1,3 @@
-import { useEffect, useState, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
 import Navigation from "./components/Navigation";
 import Hero from "./components/Hero";
 import Features from "./components/Features";

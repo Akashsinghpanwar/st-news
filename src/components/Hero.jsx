@@ -1,74 +1,20 @@
-import { useEffect, useRef, useState, lazy, Suspense } from "react";
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { STORE } from "../data/storeData";
 
-const Scene3D = lazy(() => import("./Scene3D"));
-
-function CursorLight() {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 80, damping: 30 });
-  const springY = useSpring(y, { stiffness: 80, damping: 30 });
-
-  useEffect(() => {
-    const handleMove = (e) => { x.set(e.clientX); y.set(e.clientY); };
-    window.addEventListener("mousemove", handleMove);
-    return () => window.removeEventListener("mousemove", handleMove);
-  }, []);
-
-  return (
-    <motion.div
-      className="hero-cursor-light"
-      style={{
-        position: "fixed", left: springX, top: springY,
-        width: 600, height: 600, marginLeft: -300, marginTop: -300,
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(255,182,39,0.06) 0%, transparent 70%)",
-        pointerEvents: "none", zIndex: 9998, display: "none",
-      }}
-    />
-  );
-}
-
-/* animated scroll-cue ticker */
-function ScrollCue() {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 2.4, duration: 1 }}
-      style={{
-        position: "absolute", bottom: "1.5rem", left: "50%",
-        transform: "translateX(-50%)",
-        display: "flex", flexDirection: "column", alignItems: "center",
-        gap: "0.4rem", zIndex: 2,
-      }}
-    >
-      <span style={{
-        fontFamily: "var(--font-mono)", fontSize: "0.5rem",
-        letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--silver)",
-      }}>
-        Scroll
-      </span>
-      <motion.div
-        animate={{ height: [30, 12, 30], opacity: [1, 0.3, 1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        style={{ width: 1, background: "linear-gradient(to bottom, var(--neon-amber), transparent)" }}
-      />
-    </motion.div>
-  );
-}
+const PRODUCTS = [
+  { src: "/images/reeses-cups.png",   alt: "Reese's Cups",  delay: 0.2  },
+  { src: "/images/mountain-dew.png",  alt: "Mountain Dew",  delay: 0.35 },
+  { src: "/images/dr-pepper.png",     alt: "Dr Pepper",     delay: 0.5  },
+];
 
 export default function Hero() {
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
 
-  const y        = useTransform(scrollYProgress, [0, 1], [0, 280]);
-  const opacity  = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
-  const scale    = useTransform(scrollYProgress, [0, 0.5], [1, 0.93]);
-  const bgY      = useTransform(scrollYProgress, [0, 1], [0, 80]);
-
-  const title = "ST NEWS";
+  const bgY     = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const textY   = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
     <section
@@ -76,206 +22,296 @@ export default function Hero() {
       id="about"
       style={{
         minHeight: "100svh",
-        display: "flex", flexDirection: "column",
-        justifyContent: "center", alignItems: "center", textAlign: "center",
-        position: "relative", padding: "2rem 1.25rem", overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        position: "relative",
+        overflow: "hidden",
+        padding: "0 clamp(1.25rem, 5vw, 5rem)",
       }}
     >
-      <CursorLight />
-
-      {/* ── Static bg layers ── */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-        <motion.div style={{ y: bgY }}>
-          <div style={{
-            position: "absolute", inset: 0,
-            backgroundImage: "url('/images/store-front.png')",
-            backgroundSize: "cover", backgroundPosition: "center 30%",
-            opacity: 0.09, filter: "blur(3px)",
-          }} />
-        </motion.div>
-        <div style={{
-          position: "absolute", inset: 0,
-          background:
-            "radial-gradient(ellipse at 25% 25%, rgba(255,182,39,0.10) 0%, transparent 50%)," +
-            "radial-gradient(ellipse at 75% 75%, rgba(0,229,255,0.05) 0%, transparent 50%)," +
-            "radial-gradient(ellipse at 50% 50%, rgba(255,45,135,0.03) 0%, transparent 60%)",
-        }} />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, rgba(10,10,15,0.2) 0%, rgba(10,10,15,0.96) 100%)",
-        }} />
-        {/* subtle grid */}
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage:
-            "linear-gradient(rgba(255,182,39,0.02) 1px, transparent 1px)," +
-            "linear-gradient(90deg, rgba(255,182,39,0.02) 1px, transparent 1px)",
-          backgroundSize: "50px 50px",
-          maskImage: "radial-gradient(ellipse at center, black 20%, transparent 70%)",
-          WebkitMaskImage: "radial-gradient(ellipse at center, black 20%, transparent 70%)",
-        }} />
-      </div>
-
-      {/* ── 3D Canvas Scene ── */}
-      <Suspense fallback={null}>
-        <Scene3D />
-      </Suspense>
-
-      {/* ── Hero content ── */}
+      {/* ── Background photo ── */}
       <motion.div
         style={{
-          position: "relative", zIndex: 2,
-          maxWidth: 900, width: "100%",
-          y, opacity, scale,
+          position: "absolute", inset: 0, y: bgY,
+          backgroundImage: "url('/images/store-front.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center 40%",
+          willChange: "transform",
         }}
+      />
+      {/* Gradient veil */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background:
+          "linear-gradient(105deg, rgba(10,10,15,0.97) 0%, rgba(10,10,15,0.88) 45%, rgba(10,10,15,0.45) 75%, rgba(10,10,15,0.25) 100%)",
+      }} />
+      {/* Bottom fade */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0, height: "35%",
+        background: "linear-gradient(to top, var(--obsidian) 0%, transparent 100%)",
+        pointerEvents: "none",
+      }} />
+
+      {/* ── Layout ── */}
+      <div style={{
+        position: "relative", zIndex: 2,
+        maxWidth: 1280, width: "100%", margin: "0 auto",
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: "4rem",
+        alignItems: "center",
+        paddingTop: "6rem",
+        paddingBottom: "4rem",
+      }}
+        className="hero-grid"
       >
-        {/* Eyebrow */}
-        <motion.div
-          className="hero-eyebrow"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.7 }}
-          style={{
-            fontFamily: "var(--font-mono)", fontSize: "0.7rem",
-            letterSpacing: "0.2em", textTransform: "uppercase",
-            color: "var(--neon-amber)", marginBottom: "1.25rem",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            gap: "0.75rem", flexWrap: "wrap",
-          }}
-        >
-          <span className="line" style={{ width: 30, height: 1, background: "var(--neon-amber)", display: "inline-block" }} />
-          {STORE.address}
-          <span className="line" style={{ width: 30, height: 1, background: "var(--neon-amber)", display: "inline-block" }} />
+        {/* ── Left: text ── */}
+        <motion.div style={{ y: textY, opacity }}>
+          {/* Eyebrow */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.55 }}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.6rem",
+              marginBottom: "1.75rem",
+            }}
+          >
+            <span style={{
+              width: 24, height: 1,
+              background: "var(--neon-amber)", display: "inline-block",
+            }} />
+            <span style={{
+              fontFamily: "var(--font-mono)", fontSize: "0.68rem",
+              letterSpacing: "0.22em", textTransform: "uppercase",
+              color: "var(--neon-amber)",
+            }}>
+              {STORE.address}
+            </span>
+          </motion.div>
+
+          {/* Headline */}
+          <div style={{ overflow: "hidden", marginBottom: "1.5rem" }}>
+            <motion.h1
+              initial={{ y: "110%" }}
+              animate={{ y: "0%" }}
+              transition={{ delay: 0.25, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(4.5rem, 12vw, 9rem)",
+                lineHeight: 0.88,
+                letterSpacing: "0.02em",
+                color: "var(--cream)",
+              }}
+            >
+              <span style={{ color: "var(--neon-amber)" }}>ST</span>{" "}
+              NEWS
+            </motion.h1>
+          </div>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            style={{
+              fontSize: "clamp(0.95rem, 2vw, 1.2rem)",
+              color: "var(--silver)",
+              maxWidth: 440,
+              lineHeight: 1.7,
+              fontWeight: 300,
+              marginBottom: "2.5rem",
+            }}
+          >
+            Aberdeen's favourite convenience store — open&nbsp;24&nbsp;hours,
+            365&nbsp;days&nbsp;a&nbsp;year. Specialists in American imports
+            and everyday essentials.
+          </motion.p>
+
+          {/* Stats row */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.65, duration: 0.5 }}
+            style={{
+              display: "flex", gap: "0", marginBottom: "2.75rem",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            {[
+              { value: "4.8", label: "Google Rating" },
+              { value: "24/7", label: "Always Open" },
+              { value: "22+", label: "Reviews" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 + i * 0.1 }}
+                style={{
+                  flex: 1,
+                  padding: "1rem 0",
+                  paddingLeft: i > 0 ? "1.5rem" : 0,
+                  borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.08)" : "none",
+                  paddingRight: "1.5rem",
+                }}
+              >
+                <div style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "clamp(1.6rem, 3vw, 2.4rem)",
+                  color: "var(--cream)", lineHeight: 1,
+                  marginBottom: "0.2rem",
+                }}>
+                  {s.value}
+                </div>
+                <div style={{
+                  fontFamily: "var(--font-mono)", fontSize: "0.58rem",
+                  letterSpacing: "0.15em", textTransform: "uppercase",
+                  color: "var(--silver)",
+                }}>
+                  {s.label}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTAs */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.85, duration: 0.5 }}
+            style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}
+            className="hero-cta-wrap"
+          >
+            <motion.a
+              href="#products"
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                fontFamily: "var(--font-mono)", fontSize: "0.7rem",
+                fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
+                padding: "0.9rem 2.2rem",
+                background: "var(--neon-amber)", color: "var(--obsidian)",
+                textDecoration: "none", borderRadius: 2,
+                boxShadow: "0 4px 24px rgba(255,182,39,0.22)",
+                display: "inline-block",
+              }}
+            >
+              See Products
+            </motion.a>
+            <motion.a
+              href="#location"
+              whileHover={{ y: -2, borderColor: "rgba(255,255,255,0.3)", color: "var(--cream)" }}
+              whileTap={{ scale: 0.97 }}
+              style={{
+                fontFamily: "var(--font-mono)", fontSize: "0.7rem",
+                fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
+                padding: "0.9rem 2.2rem",
+                background: "transparent", color: "var(--silver)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                textDecoration: "none", borderRadius: 2,
+                display: "inline-block",
+                transition: "border-color 0.25s, color 0.25s",
+              }}
+            >
+              Get Directions
+            </motion.a>
+          </motion.div>
         </motion.div>
 
-        {/* Title — letter-by-letter 3D flip */}
-        <h1 style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "clamp(4rem, 18vw, 12rem)",
-          lineHeight: 0.85, letterSpacing: "0.02em",
-          color: "var(--cream)", marginBottom: "1.25rem",
-          perspective: "1200px",
-          display: "flex", justifyContent: "center",
-          flexWrap: "wrap", gap: "0.03em",
-        }}>
-          {title.split("").map((char, i) => (
-            <motion.span
-              key={i}
-              initial={{ opacity: 0, y: 80, rotateX: -90, filter: "blur(10px)" }}
-              animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
-              transition={{ duration: 0.8, delay: 0.4 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-              style={{
-                display: "inline-block",
-                color: char === " " ? "transparent" : i < 2 ? "var(--neon-amber)" : "var(--cream)",
-                textShadow: i < 2
-                  ? "0 0 50px rgba(255,182,39,0.7), 0 0 100px rgba(255,182,39,0.3)"
-                  : "none",
-                transformStyle: "preserve-3d",
-              }}
-            >
-              {char}
-            </motion.span>
-          ))}
-        </h1>
-
-        {/* Subtitle */}
-        <motion.p
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        {/* ── Right: product photos ── */}
+        <div
+          className="hero-product-stack"
           style={{
-            fontSize: "clamp(0.9rem, 2.5vw, 1.35rem)",
-            color: "var(--silver)", maxWidth: 480, margin: "0 auto 2rem",
-            fontWeight: 300, lineHeight: 1.6, padding: "0 0.5rem",
+            position: "relative",
+            height: "clamp(360px, 55vh, 580px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {STORE.tagline}. Renowned for our incredible range of American sweets &amp; drinks,
-          serving Aberdeen around the clock.
-        </motion.p>
-
-        {/* Stats */}
-        <motion.div
-          className="hero-stats"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.6 }}
-          style={{ display: "flex", gap: "1.5rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "2rem" }}
-        >
-          {[
-            { value: "4.8", unit: "/5", label: "Rating" },
-            { value: "24", unit: "hr", label: "Open" },
-            { value: "22", unit: "+", label: "Reviews" },
-          ].map((stat, i) => (
+          {PRODUCTS.map((p, i) => (
             <motion.div
-              key={stat.label}
-              className="hero-stat-box"
-              initial={{ opacity: 0, y: 20, scale: 0.85 }}
+              key={p.src}
+              initial={{ opacity: 0, y: 40, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 1.3 + i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ scale: 1.05, borderColor: "rgba(255,182,39,0.25)" }}
+              transition={{ delay: p.delay, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -8, zIndex: 10 }}
               style={{
-                textAlign: "center", padding: "0.75rem 1.25rem",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: 4, cursor: "default",
-                backdropFilter: "blur(8px)",
-                transition: "border-color 0.3s",
+                position: "absolute",
+                left: `${[10, 32, 54][i]}%`,
+                top: `${[5, 20, 8][i]}%`,
+                zIndex: 3 - i,
+                cursor: "default",
+                filter: "drop-shadow(0 24px 48px rgba(0,0,0,0.65))",
               }}
             >
-              <div className="value" style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "var(--cream)", lineHeight: 1 }}>
-                {stat.value}<span className="unit" style={{ color: "var(--neon-amber)", fontSize: "1.2rem" }}>{stat.unit}</span>
-              </div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.55rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--silver)", marginTop: "0.15rem" }}>
-                {stat.label}
-              </div>
+              <img
+                src={p.src}
+                alt={p.alt}
+                style={{
+                  height: `clamp(${[220, 200, 180][i]}px, ${[32, 29, 26][i]}vw, ${[300, 270, 240][i]}px)`,
+                  width: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
             </motion.div>
           ))}
-        </motion.div>
 
-        {/* CTAs */}
+          {/* Soft ambient glow behind photos */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background:
+              "radial-gradient(ellipse at 60% 50%, rgba(255,182,39,0.07) 0%, transparent 65%)",
+            pointerEvents: "none",
+          }} />
+        </div>
+      </div>
+
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.8, duration: 1 }}
+        style={{
+          position: "absolute", bottom: "2rem", left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: "0.5rem", zIndex: 3,
+        }}
+      >
+        <span style={{
+          fontFamily: "var(--font-mono)", fontSize: "0.5rem",
+          letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--silver)",
+          opacity: 0.6,
+        }}>
+          Scroll
+        </span>
         <motion.div
-          className="hero-cta-wrap"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.6, duration: 0.5 }}
-          style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}
-        >
-          <motion.a
-            href="#products"
-            whileHover={{ y: -3, scale: 1.04, boxShadow: "0 8px 30px rgba(255,182,39,0.4)" }}
-            whileTap={{ scale: 0.96 }}
-            style={{
-              fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 700,
-              letterSpacing: "0.12em", textTransform: "uppercase",
-              padding: "0.85rem 2rem",
-              background: "var(--neon-amber)", color: "var(--obsidian)",
-              display: "inline-block", textDecoration: "none", borderRadius: 2,
-              boxShadow: "0 4px 20px rgba(255,182,39,0.3)",
-              transition: "box-shadow 0.3s",
-            }}
-          >
-            View Products
-          </motion.a>
-          <motion.a
-            href="#location"
-            whileHover={{ borderColor: "var(--neon-amber)", color: "var(--neon-amber)", y: -3 }}
-            whileTap={{ scale: 0.96 }}
-            style={{
-              fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 700,
-              letterSpacing: "0.12em", textTransform: "uppercase",
-              padding: "0.85rem 2rem",
-              background: "transparent", color: "var(--cream)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              display: "inline-block", textDecoration: "none", borderRadius: 2,
-              transition: "border-color 0.3s, color 0.3s",
-            }}
-          >
-            Get Directions
-          </motion.a>
-        </motion.div>
+          animate={{ scaleY: [1, 0.4, 1], opacity: [0.6, 0.2, 0.6] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            width: 1, height: 28,
+            background: "linear-gradient(to bottom, var(--neon-amber), transparent)",
+            transformOrigin: "top",
+          }}
+        />
       </motion.div>
 
-      <ScrollCue />
+      <style>{`
+        @media (max-width: 768px) {
+          .hero-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2.5rem !important;
+            padding-top: 7rem !important;
+          }
+          .hero-product-stack {
+            height: 240px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }
